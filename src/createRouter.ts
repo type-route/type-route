@@ -10,6 +10,7 @@ import {
   RouterContext,
   UmbrellaBlocker,
   RouterOpts,
+  InternalSession,
 } from "./types";
 import { createRouteBuilder } from "./createRouteBuilder";
 import {
@@ -84,8 +85,17 @@ export function createRouter(...args: any[]): UmbrellaCoreRouter {
   let initialRoute: UmbrellaRoute | null = null;
   let previousRoute: UmbrellaRoute | null = null;
   let blockerCollection: UmbrellaBlocker[] = [];
+  let suspending = false;
 
   applySessionOpts(opts.session);
+
+  const internalSession: { "~internal": InternalSession } = {
+    "~internal": {
+      setSuspending(value) {
+        suspending = value;
+      },
+    },
+  };
 
   const router: UmbrellaCoreRouter = {
     routes,
@@ -213,6 +223,7 @@ export function createRouter(...args: any[]): UmbrellaCoreRouter {
         };
       },
       listen: (handler) => navigationHandlerManager.add(handler),
+      ...(internalSession as any),
     },
   };
 
@@ -277,7 +288,7 @@ export function createRouter(...args: any[]): UmbrellaCoreRouter {
 
     const [pathname, search] = splitFirst(route.href, "?");
 
-    history[route.action === "replace" ? "replace" : "push"](
+    history[route.action === "replace" || suspending ? "replace" : "push"](
       {
         pathname,
         search: search ? `?${search}` : "",

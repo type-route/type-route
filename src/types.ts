@@ -150,6 +150,10 @@ type OptionalOutputParamsNames<TParamDefCollection> = Exclude<
   RequiredOutputParamsNames<TParamDefCollection>
 >;
 
+export type InternalSession = {
+  setSuspending(suspending: boolean): void;
+};
+
 export type ParamValue<TParamDef> = TParamDef extends ParamDef<
   any,
   infer TValue

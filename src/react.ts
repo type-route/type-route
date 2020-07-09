@@ -4,6 +4,7 @@ import {
   UmbrellaRoute,
   RouteDefCollectionRoute,
   RouterOpts,
+  InternalSession,
 } from "./types";
 import { createRouter as coreCreateRouter, parseArgs } from "./createRouter";
 import { TypeRouteError } from "./TypeRouteError";
@@ -75,11 +76,25 @@ export function createRouter(...args: any[]): UmbrellaRouter {
 
   function RouteProvider(props: { children?: any }) {
     const [route, setRoute] = React.useState(router.session.getInitialRoute());
-    React.useEffect(() => router.session.listen(setRoute), []);
+
+    React.useEffect(
+      () =>
+        router.session.listen((nextRoute) => {
+          getInternalSession().setSuspending(true);
+          setRoute(nextRoute);
+        }),
+      []
+    );
 
     React.useEffect(() => {
       attemptScrollToTop(route, opts.scrollToTop);
     }, [route]);
+
+    const previousRoute = usePrevious(route);
+
+    if (previousRoute !== route) {
+      getInternalSession().setSuspending(false);
+    }
 
     return React.createElement(
       routeContext.Provider,
@@ -99,4 +114,18 @@ export function createRouter(...args: any[]): UmbrellaRouter {
 
     return route!;
   }
+
+  function getInternalSession() {
+    return (router.session as any)["~internal"] as InternalSession;
+  }
+}
+
+function usePrevious<T>(value: T): T | null {
+  const ref = React.useRef<T | null>(null);
+
+  React.useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref.current;
 }
