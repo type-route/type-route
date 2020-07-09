@@ -278,6 +278,8 @@ export function createRouter(...args: any[]): UmbrellaCoreRouter {
       return;
     }
 
+    let previouslySuspending = suspending;
+
     if (skipHandlingNextApplicationTriggeredNavigation) {
       skipHandlingNextApplicationTriggeredNavigation = false;
     } else {
@@ -288,7 +290,11 @@ export function createRouter(...args: any[]): UmbrellaCoreRouter {
 
     const [pathname, search] = splitFirst(route.href, "?");
 
-    history[route.action === "replace" || suspending ? "replace" : "push"](
+    history[
+      route.action === "replace" || (previouslySuspending && suspending)
+        ? "replace"
+        : "push"
+    ](
       {
         pathname,
         search: search ? `?${search}` : "",

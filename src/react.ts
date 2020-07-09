@@ -80,8 +80,8 @@ export function createRouter(...args: any[]): UmbrellaRouter {
     React.useEffect(
       () =>
         router.session.listen((nextRoute) => {
-          getInternalSession().setSuspending(true);
           setRoute(nextRoute);
+          getInternalSession().setSuspending(true);
         }),
       []
     );
